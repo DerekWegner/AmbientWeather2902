@@ -4,7 +4,7 @@ TLDR: Setup the Ambient Weather console to make periodic requests to a local HTT
 
 Security note: Don't run this server on the open internet. There is no protection against things like SQL injection attacks. This code should only be run on your local network, which is hopefully free of malicious users. You have been warned.
 
-Use *awnet* from your phone to tell the console to send periodic HTTP requests to an HTTP server on your local network. Here is an example settings page:
+Use *awnet* on your phone to tell the console to send periodic HTTP requests to an HTTP server on your local network. The ip address is the local ip of the host running *weather.py*. *port* is a random port that needs to match here and as specified when running *weather.py*. Here is an example settings page:
 
 ![awnet setting](Screenshot_20231231-092006.png)
 
