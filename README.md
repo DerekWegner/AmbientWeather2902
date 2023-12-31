@@ -16,5 +16,5 @@ Notes:
 <ol>
   <li>Python code is purposely simplistic to make maintenance easier.</li>
   <li>Code written to support a 2902a, I don't know if there are new/additional parameters for later models. If so, they should be easy to add.</li>
-  <li>There is some SQL code to analyze the weather data looking for runs of rainy/windy/cold days in *bin/analyzeWeather.sh*.</li>
+  <li>There is some SQL code to analyze the weather data looking for runs of rainy/windy/cold days in <i>bin/analyzeWeather.sh</li>i>.</li>
 </ol>
