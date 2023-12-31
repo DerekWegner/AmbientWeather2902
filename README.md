@@ -8,7 +8,9 @@ Use *awnet* from your phone to tell the console to send periodic HTTP requests t
 
 ![awnet setting](Screenshot_20231231-092006.png)
 
-On your local server run *bin/weather.py*, either manually or as a service (for Linux see *service/Weather.service*).
+On your local server run *bin/weather.py*, either manually or as a service (for Linux see *service/Weather.service*). It takes two optional args:
+
+bin/weather.py [DB file] [HTTP port]
 
 That's it. Hopefully it will just work.
 
