@@ -1,4 +1,4 @@
-Simple process for collecting weather data from an Ambient Weather 2902 weather station into a MySql DB.
+Simple process for collecting weather data from an Ambient Weather 2902 weather station into a MySql DB. All processing is done on the local network.
 
 TLDR: Setup the Ambient Weather console to make periodic requests to a local HTTP server on your network. On your local server run a Python program to put up an HTTP server, receive the requests, parse the request parameters, and store them into a MySql DB.
 
