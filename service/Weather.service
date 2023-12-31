@@ -1,0 +1,32 @@
+
+# Stored in /lib/systemd/system/Weather.service
+# Ex:
+# sudo systemctl daemon-reload
+# sudo systemctl status Weather
+# sudo systemctl restart Weather
+# sudo systemctl status Weather
+# sudo systemctl stop Weather
+# sudo systemctl start Weather
+
+# See https://www.freedesktop.org/software/systemd/man/systemd.service.html
+
+
+[Unit]
+Description=Weather logging service
+After=multi-user.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=idle
+ExecStart=/home/dwegner/repos/Weather/bin/weather.py var/weather.sqlite 8088
+Restart=always
+# See https://stackoverflow.com/questions/37585758/how-to-redirect-output-of-systemd-service-to-a-file
+StandardOutput=/dev/null
+RestartSec=20s
+User=dwegner
+Group=dwegner
+WorkingDirectory=/home/dwegner/repos/Weather
+
+[Install]
+WantedBy=multi-user.target
