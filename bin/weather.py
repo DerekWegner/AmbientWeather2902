@@ -2,8 +2,10 @@
 import http.server
 import socketserver
 import sqlite3
+import statsd
 import sys
 import socket
+import time
 # import SimpleHTTPServer
 
 # import time
@@ -11,7 +13,9 @@ import socket
 DB_FILE = sys.argv[1] if len(sys.argv)>1 else 'weather.sqlite'
 # PORT = 8088
 PORT = int(sys.argv[2]) if len(sys.argv)>2 else 8088
+VACUUM_SECONDS = 1*60
 
+last_vacuum = int(time.time());
 class RequestHandler(http.server.BaseHTTPRequestHandler):
     def log_request(self, format, *args):
         # Don't barf every request to stderr/stdout
@@ -23,11 +27,9 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         query_components = dict(qc.split("=") for qc in self.path[2:].split("&"))
 
-        conn = sqlite3.connect(DB_FILE)         # or ':memory:'
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS data
-                     (key text, value text)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS weather
+        connection = sqlite3.connect(DB_FILE)         # or ':memory:'
+        cursor = connection.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS weather
        (
        stationtype text,
        dateutc text PRIMARY KEY,
@@ -54,9 +56,9 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 ''')
        # for key, value in query_components.items():
        #    c.execute("INSERT INTO data VALUES (?,?)", (key, value))
-       # conn.commit()
+       # connection.commit()
 
-        c.execute('''INSERT OR REPLACE INTO weather (
+        cursor.execute('''INSERT OR REPLACE INTO weather (
 stationtype,
 dateutc, 
 tempinf, 
@@ -91,15 +93,27 @@ tempf,humidity,winddir,windspeedmph,windgustmph,maxdailygust,hourlyrainin,eventr
                   )
                   )
                   
-        conn.commit()
-        nRecs = c.execute("Select Count(*) from weather");
+        connection.commit()
+
+        global last_vacuum
+        now = int(time.time())
+        print(f"now {now}, last_vacuum:{last_vacuum}")
+        
+        
+        if(now - last_vacuum >= VACUUM_SECONDS):
+            print("Doing a vacuum");
+            connection.execute('vacuum;')
+            last_vacuum = now;
+
+
         # See https://stackoverflow.com/questions/858623/how-to-recognize-whether-a-script-is-running-on-a-tty
         if sys.stdout.isatty():
-            print(f"{query_components.get('dateutc')} ({nRecs.fetchone()[0]}) tempf:{query_components.get('tempf')} tempinf:{query_components.get('tempinf')} windspeedmph:{query_components.get('windspeedmph')} windgustmph:{query_components.get('windgustmph')} hourlyrainin:{query_components.get('hourlyrainin')}")
-        # print(query_components);
-        nRecs.close()
-        c.close()
-        conn.close()
+            number_records = cursor.execute("Select Count(*) from weather");
+            print(f"{query_components.get('dateutc')} number_records:{number_records.fetchone()[0]} tempf:{query_components.get('tempf')} tempinf:{query_components.get('tempinf')} windspeedmph:{query_components.get('windspeedmph')} windgustmph:{query_components.get('windgustmph')} hourlyrainin:{query_components.get('hourlyrainin')}")
+            # print(query_components);
+            number_records.close()
+        cursor.close()
+        connection.close()
 
 class MyTCPServer(socketserver.TCPServer):
     def server_bind(self):
@@ -108,13 +122,23 @@ class MyTCPServer(socketserver.TCPServer):
 
 # with socketserver.TCPServer(("", PORT), RequestHandler) as httpd:
 # See https://stackoverflow.com/questions/6380057/python-binding-socket-address-already-in-use
-with MyTCPServer(("", PORT), RequestHandler) as httpd:
-    try:
-        print(F"Storing into {DB_FILE}, listening on port {PORT}")
-        httpd.serve_forever()
-    finally:
-        print("In finally, shutdown httpd");
-        httpd.shutdown()
-        httpd.server_close()
-        # time.sleep(2)
-        print("In finally, done");
+
+# Entry point. See https://docs.python.org/3/library/__main__.html
+
+def main() -> int:
+    """Whatever"""
+    print("In main")
+    with MyTCPServer(("", PORT), RequestHandler) as httpd:
+        try:
+            print(F"Storing into {DB_FILE}, listening on port {PORT}, VACUUM_SECONDS: {VACUUM_SECONDS}")
+            httpd.serve_forever()
+        finally:
+            print("In finally, shutdown httpd");
+            httpd.shutdown()
+            httpd.server_close()
+            # time.sleep(2)
+            print("In finally, done");
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
